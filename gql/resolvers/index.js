@@ -1,6 +1,7 @@
 const { collection } = require('../../dbConfig/index.js');
 const argon2 = require('argon2');
 const jwt = require('jsonwebtoken');
+const { GraphQLError } = require('graphql');
 
 module.exports = {
   Query: {
@@ -8,11 +9,15 @@ module.exports = {
   },
   Mutation: {
     signup: async (parent, args, context, info) => {
-      try {
+     
         const { name, email, password } = args;
         const alreadyExist = await collection.findOne({ email });
         if (alreadyExist) {
-          throw Error('Email already exists');
+          throw new GraphQLError('Email already exist', {
+            extensions: {
+              code: 'GRAPHQL_VALIDATION_FAILED',
+            },
+          });
         }
         const hashPass = await argon2.hash(password);
         const user = await collection.insertOne({
@@ -22,27 +27,27 @@ module.exports = {
         })
         const resultData = { name, email, id: user.insertedId }
         return resultData;
-      }
-      catch (err) {
-        console.log(err);
-      }
     },
     login: async (parent, args, context, info) => {
-      try {
+     
         const { email, password } = args;
         const user = await collection.findOne({ email });
         if (!user) {
-          throw Error("User not found...!");
+          throw new GraphQLError('User not found', {
+            extensions: {
+              code: 'GRAPHQL_VALIDATION_FAILED',
+            },
+          });
         }
         if (!(await argon2.verify(user.password, password))) {
-          throw Error("Password did not match");
+          throw new GraphQLError('Password did not match', {
+            extensions: {
+              code: 'GRAPHQL_VALIDATION_FAILED',
+            },
+          });
         }
         const token = jwt.sign({ data: { userId: user._id, email } }, 'secret', { expiresIn: '1h' })
         return { user, token };
-      }
-      catch (err) {
-        console.log(err);
-      }
     }
   }
 };

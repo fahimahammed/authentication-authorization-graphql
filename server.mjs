@@ -5,8 +5,8 @@ import express from 'express';
 import http from 'http';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import { ApolloServerErrorCode } from '@apollo/server/errors';
 
-import {db} from './dbConfig/index.js';
 
 // The GraphQL schema
 
@@ -22,6 +22,24 @@ const httpServer = http.createServer(app);
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  formatError: (formattedError, error) => {
+    //console.log(formattedError);
+    if (
+      formattedError.extensions.code === ApolloServerErrorCode.GRAPHQL_VALIDATION_FAILED
+    ) {
+      return {
+        code: 400,
+        status: formattedError.extensions.code,
+        message: formattedError.message,
+      };
+    }
+    return {
+        code: 500,
+        status: "INTERNAL_SERVER_ERROR",
+        message: "Internal Server Error",
+    };
+    
+  },
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 });
 await server.start();
