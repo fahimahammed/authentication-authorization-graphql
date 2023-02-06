@@ -8,12 +8,14 @@ import bodyParser from 'body-parser';
 import { ApolloServerErrorCode } from '@apollo/server/errors';
 
 
+
 // The GraphQL schema
 
 
 // A map of functions which return data for the schema.
 import typeDefs from './gql/schema/index.js';
 import resolvers from './gql/resolvers/index.js';
+import { getUserByToken } from './utils.js';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -22,6 +24,11 @@ const httpServer = http.createServer(app);
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  context: ({ req }) => {
+    //console.log("ok",req)
+    //const user = getUserByToken(req);
+    return {a: 21, f: "fahim"};
+  },
   formatError: (formattedError, error) => {
     //console.log(formattedError);
     if (
@@ -43,6 +50,7 @@ const server = new ApolloServer({
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 });
 await server.start();
+
 
 app.use(
   cors(),

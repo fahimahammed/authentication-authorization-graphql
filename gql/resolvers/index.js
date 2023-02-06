@@ -6,6 +6,11 @@ const { GraphQLError } = require('graphql');
 module.exports = {
   Query: {
     hello: () => 'Fahim Ahammed Firoz',
+    me: (parents, args, context) => {
+
+      console.log("hello", context);
+      return context.auth_user
+    }
   },
   Mutation: {
     signup: async (parent, args, context, info) => {

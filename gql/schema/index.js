@@ -1,6 +1,7 @@
 module.exports = `#graphql
   type Query {
     hello: String
+    me: User
   },
   type User{
     id: ID
